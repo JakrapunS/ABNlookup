@@ -7,14 +7,14 @@ import urllib.request as req
 import xml.etree.ElementTree as ET
 import pandas as pd
 
-def connect_api(guid):
+def connect_api(name,guid):
     # Search parameters for ABRSearchByNameSimpleProtocol service
     # Note, this service requires all parameters to be specified, even if you specify no query parameter
     # The parameters specified below will search for an entity with  the name 'coles' with postcode '2250'
     # In this case, unspecified search parameters all default to 'Y'
     # (i.e. will search for the legal & trading name 'coles' in all States and Territories
-    name = 'coles'
-    postcode = '2250'
+    name = name
+    postcode = ''
     legalName = ''
     tradingName = ''
     NSW = 'Y'
@@ -93,7 +93,7 @@ def df_return(xml_text):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    xml_text = connect_api('33ae5dc0-c84a-47e2-8ebf-f54fc59abbf6')
+    xml_text = connect_api('anywise','33ae5dc0-c84a-47e2-8ebf-f54fc59abbf6')
     df = df_return(xml_text)
     test = df.to_csv('abn.csv',index=False)
 
