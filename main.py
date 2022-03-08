@@ -13,7 +13,8 @@ def connect_api(name,guid):
     # The parameters specified below will search for an entity with  the name 'coles' with postcode '2250'
     # In this case, unspecified search parameters all default to 'Y'
     # (i.e. will search for the legal & trading name 'coles' in all States and Territories
-    name = name
+    name_clean = name.replace(" ","%20")
+    name = name_clean
     postcode = ''
     legalName = ''
     tradingName = ''
@@ -70,17 +71,64 @@ def df_return(xml_text):
             elif item.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}fullName':
                 i['trading_name'] = item.text
 
-            if item.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}isCurrentIndicator':
-                i['current'] = item.text
+            if item.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}mainName':
+                for item in items.iter('{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}mainName'):
+                    for j in item.iter():
+                        if j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}organisationName':
+                            i['trading_name'] = j.text
+                        elif j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}fullName':
+                            i['trading_name'] = j.text
 
-            if item.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}isCurrentIndicator':
-                i['current'] = item.text
+                        if j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}isCurrentIndicator':
+                            i['current_name'] = j.text
 
-            if item.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}stateCode':
-                i['state'] = item.text
+            elif item.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}businessName':
+                for item in items.iter('{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}businessName'):
+                    for j in item.iter():
+                        if j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}organisationName':
+                            i['trading_name'] = j.text
+                        elif j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}fullName':
+                            i['trading_name'] = j.text
 
-            if item.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}postcode':
-                i['postcode'] = item.text
+                        if j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}isCurrentIndicator':
+                            i['current_name'] = j.text
+
+
+            elif item.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}legalName':
+                for item in items.iter('{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}legalName'):
+                    for j in item.iter():
+                        if j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}organisationName':
+                            i['trading_name'] = j.text
+                        elif j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}fullName':
+                            i['trading_name'] = j.text
+
+                        if j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}isCurrentIndicator':
+                            i['current_name'] = j.text
+            elif item.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}mainTradingName':
+                for item in items.iter('{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}mainTradingName'):
+                    for j in item.iter():
+                        if j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}organisationName':
+                            i['trading_name'] = j.text
+                        elif j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}fullName':
+                            i['trading_name'] = j.text
+
+                        if j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}isCurrentIndicator':
+                            i['current_name'] = j.text
+
+            if item.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}mainBusinessPhysicalAddress':
+                for item in items.iter(
+                        '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}mainBusinessPhysicalAddress'):
+                    for j in item.iter():
+                        if j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}stateCode':
+                            i['state'] = j.text
+                        elif j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}postcode':
+                            i['postcode'] = j.text
+
+                        if j.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}isCurrentIndicator':
+                            i['current_address'] = j.text
+
+            if item.tag == '{http://abr.business.gov.au/ABRXMLSearchRPC/literalTypes}score':
+                i['score'] = item.text
 
         result.append(i)
 
