@@ -3,11 +3,21 @@
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
-import urllib.request as req
-import xml.etree.ElementTree as ET
+from fuzzywuzzy import fuzz
 import pandas as pd
+import xml.etree.ElementTree as ET
+import urllib.request as req
 
-def connect_api(name,guid):
+def connect_api(name,guid,post):
+    """
+    Connect to ABN Lookup API
+
+    :param name: Company Name
+    :param guid: authen id
+    :param post: postcode
+    :return: XML file
+    """
+
     # Search parameters for ABRSearchByNameSimpleProtocol service
     # Note, this service requires all parameters to be specified, even if you specify no query parameter
     # The parameters specified below will search for an entity with  the name 'coles' with postcode '2250'
@@ -15,7 +25,7 @@ def connect_api(name,guid):
     # (i.e. will search for the legal & trading name 'coles' in all States and Territories
     name_clean = name.replace(" ","%20")
     name = name_clean
-    postcode = ''
+    postcode = post
     legalName = ''
     tradingName = ''
     NSW = 'Y'
@@ -49,6 +59,12 @@ def connect_api(name,guid):
     return returnedXML
 
 def df_return(xml_text):
+    """
+    Transfrom XML to dataframe
+
+    :param xml_text: XML result from API
+    :return: pandas dataframe
+    """
     #transform string to xml
     tree = ET.fromstring(xml_text)
     result = []
@@ -136,14 +152,46 @@ def df_return(xml_text):
     return pd_result
 
 
+def abn_search(name, post=''):
+    """
+    Search ABN by name and postcode. Also compute Levenshtein Distance for the case that have equally score from api.
+
+    :param name: Company name
+    :param post: postcode
+    :return: company ABN
+    """
+    if post == 'nan':
+        post = ''
+    xml_text = connect_api(name, '33ae5dc0-c84a-47e2-8ebf-f54fc59abbf6', str(post))
+    df = df_return(xml_text)
+    # Check if can find the company
+    if df.empty:
+        return ""
+    else:
+        df['score'] = df['score'].apply(lambda x: int(x))
+        df2 = df[df['abn_status'] == 'Active'].reset_index(drop=True)
+        s_max = df2['score'].max()
+        # Filter only score = max
+        df2 = df2[df2['score'] == s_max].reset_index(drop=True)
+        # If only one record left retrun abn of that record
+        if df2.shape[0] == 1:
+            return df2.iloc[0]['abn']
+        #If more than one record check name similarity and return thge most similar one.
+        else:
+            df2['Lev_score'] = df2['trading_name'].apply(lambda x: fuzz.ratio(x.lower(), name.lower()))
+            df2 = df2.sort_values(by=['Lev_score'], ascending=False)
+            return df2.iloc[0]['abn']
+
+
 
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    xml_text = connect_api('anywise','33ae5dc0-c84a-47e2-8ebf-f54fc59abbf6')
-    df = df_return(xml_text)
-    test = df.to_csv('abn.csv',index=False)
+
+
+    abn = abn_search('A C & J I Kearley','')
+    print("ABN: ",abn)
 
 
 
